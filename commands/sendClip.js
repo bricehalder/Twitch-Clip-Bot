@@ -4,15 +4,15 @@ const {Command} = require('./command');
 const {prefix} = require('../config.json');
 
 module.exports = {
-  Roll:
-    class Roll extends Command {
+  SendClip:
+    class SendClip extends Command {
       constructor() {
         super();
-        this.name = 'roll';
-        this.aliases = [this.name];
-        this.usage = `${prefix}${this.name} [integer]`;
-        this.help = 'Rolls a random number.';
-        this.description = 'Rolls a random number between 1 and the number provided (default 100).';
+        this.name = 'sendclip';
+        this.aliases = [this.name, 'sc'];
+        this.usage = `${prefix}${this.name} [Streamer Name]`;
+        this.help = 'Routinely sends clips from the past day from a specfic streamer.';
+        this.description = this.help;
       }
 
       /**

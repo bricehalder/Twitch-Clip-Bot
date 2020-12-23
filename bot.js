@@ -4,7 +4,7 @@ const config = require('./config.json');
 const {commands} = require('./commands/commands');
 
 const client = new Discord.Client();
-const sql = new SQLite('./scores.sqlite');
+const sql = new SQLite('./db/guilds.sqlite');
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -12,25 +12,27 @@ client.on('ready', () => {
   const guildList = client.guilds.cache.array();
   guildList.forEach((guild) => console.log(guild.name));
 
-  const table = sql.prepare(
+  const tables = sql.prepare(
       'SELECT count(*) \
        FROM sqlite_master \
-       WHERE type=\'table\' AND name = \'scores\';').get();
+       WHERE type=\'table\';').get();
 
-  if (!table['count(*)']) {
+  console.log(`Table count: ${tables['count(*)']}`);
+
+  if (!tables['count(*)'] == 1) {
     sql.prepare(
-        'CREATE TABLE scores ( \
-          id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER \
+        'CREATE TABLE guilds ( \
+          id INTEGER PRIMARY KEY, name TEXT \
         );').run();
-    sql.prepare('CREATE UNIQUE INDEX idx_scores_id ON scores (id);').run();
+    sql.prepare('CREATE UNIQUE INDEX idx_guilds_id ON guilds (id);').run();
     sql.pragma('synchronous = 1');
     sql.pragma('journal_mode = wal');
   }
 
-  client.getScore = sql.prepare('SELECT * FROM scores WHERE user = ? AND guild = ?');
-  client.setScore = sql.prepare(
-      'INSERT OR REPLACE INTO scores (id, user, guild, points, level) \
-       VALUES (@id, @user, @guild, @points, @level);');
+  client.getGuild = sql.prepare('SELECT * FROM guilds WHERE id = ?');
+  client.setGuild = sql.prepare(
+      'INSERT OR REPLACE INTO guilds (id, name) \
+       VALUES (@id, @name);');
 });
 
 client.on('message', (message) => {
@@ -43,32 +45,17 @@ client.on('message', (message) => {
       if (!config.testServers.includes(message.guild.id)) return;
     }
 
-    score = client.getScore.get(message.author.id, message.guild.id);
-    if (!score) {
-      if (!score) {
-        score = {
-          id: `${message.guild.id}-${message.author.id}`,
-          user: message.author.id,
-          guild: message.guild.id,
-          points: 0,
-          level: 1,
-        };
-      }
+    guild = client.getGuild.get(message.guild.id);
+    if (!guild) {
+      guild = {
+        id: message.guild.id,
+        name: message.guild.name,
+      };
+      client.setGuild.run(guild);
     }
-    score.points++;
-    const curLevel = Math.floor(0.1 * Math.sqrt(score.points));
-    if (score.level < curLevel) {
-      score.level++;
-      message.reply(`You've leveled up to level **${curLevel}**! Ain't that dandy?`);
-    }
-    client.setScore.run(score);
 
     const args = message.content.slice(config.prefix.length).trim().split(/ +/);
     const userCommand = args.shift().toLowerCase();
-
-    if (userCommand === 'points') {
-      message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
-    }
 
     for (Command of commands) {
       cmd = new Command();

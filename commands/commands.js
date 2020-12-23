@@ -1,9 +1,7 @@
-const Roll = require('./roll');
-const Neko = require('./neko');
+const {SendClip} = require('./sendClip');
 
 module.exports = {
   commands: [
-    Roll.Roll,
-    Neko.Neko,
+    SendClip,
   ],
 };
