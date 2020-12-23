@@ -1,9 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# Discord-Bot-Template
-A lightweight template for a Discord bot with a basic command handler and SQLite integration.
-
-
+# Twitch Clip Bot
+A Discord bot to routinely send the clips of any streamer to a channel.
 
 ## Usage
 
